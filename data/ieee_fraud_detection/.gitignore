@@ -1,2 +1,4 @@
 /train_identity.csv
 /train_transaction.csv
+/test_identity.csv
+/test_transaction.csv

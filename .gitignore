@@ -1,0 +1,9 @@
+# Data files - use DVC to track large files
+data/**/*.csv
+data/**/*.parquet
+data/**/*.json
+
+# Python
+.venv/
+__pycache__/
+*.pyc
