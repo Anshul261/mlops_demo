@@ -1,5 +1,18 @@
 MLOps pipeline for IEEE-CIS Fraud Detection using DVC + MLflow.
 
+## Current project status
+- Phase 1 documentation: `PHASE_1_README.md`
+- Phase 2 documentation: `PHASE_2_README.md`
+- DVC pipeline includes `prepare_data` -> `smart_preprocess` -> `train_models`
+- DVC remote is local-only (`.dvc/local_remote_store`) for a self-contained demo
+- Smart preprocessing is tracked as a DVC data stage
+- MLflow registry integration is implemented in training code (registration + aliases)
+- LightGBM is expected to be skipped in this environment due to `libgomp.so.1` missing
+
+## Execution policy
+- Long model-training commands are user-run.
+- The assistant will avoid running expensive training commands unless explicitly requested.
+
 ## What this project does
 - Extracts Kaggle IEEE fraud data from a local zip file.
 - Builds merged train/test datasets (`transaction` + `identity`).
@@ -38,6 +51,15 @@ Plus:
   - `data/ieee_fraud_detection/preprocessing/smart_preprocessor.joblib`
   - `data/ieee_fraud_detection/preprocessing/feature_groups.json`
 
+## Recommended stage-by-stage run (for stability)
+```bash
+uv run dvc repro prepare_data
+uv run dvc repro smart_preprocess
+uv run dvc repro train_models
+```
+
+If resources are tight, run one stage at a time and verify outputs before moving on.
+
 ## MLflow
 - Tracking URI: `file:./mlruns` (configured in `params.yaml`)
 - Start UI:
@@ -48,6 +70,11 @@ uv run mlflow ui --backend-store-uri file:./mlruns
 - Alias policy:
   - best run version -> `testing`
   - optional promotion to `production` via `mlflow.promote_best_to_production`
+
+Check registry and aliases:
+```bash
+uv run python -c "import mlflow; mlflow.set_tracking_uri('file:./mlruns'); c=mlflow.MlflowClient(); print([m.name for m in c.search_registered_models()])"
+```
 
 ## DVC local storage
 - This demo uses local DVC storage only.
@@ -62,10 +89,12 @@ uv run dvc pull
 - Update runtime settings in `params.yaml`:
   - data paths and target/time columns
   - processed-data and preprocessing artifact paths
+  - preprocessing chunking: `data.preprocessing_chunk_size`
   - train split/CV settings
-  - `max_train_rows` (for faster local runs)
+  - `max_train_rows` (`null` = full dataset)
   - MLflow experiment name/URI/model registry options
 
 ## Notes
 - In this environment, `lightgbm` is skipped due to missing system library (`libgomp.so.1`).
 - `xgboost` and `catboost` run successfully; if `xgboost` is unavailable, a `random_forest` fallback is used.
+- Smart preprocessing script supports chunked writes to reduce memory spikes during full-data processing.
