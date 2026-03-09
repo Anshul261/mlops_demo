@@ -1,0 +1,28 @@
+data:
+  zip_path: /home/ai_alpha_2026/Downloads/ieee-fraud-detection.zip
+  output_dir: data/ieee_fraud_detection
+  train_path: data/ieee_fraud_detection/train_merged.parquet
+  test_path: data/ieee_fraud_detection/test_merged.parquet
+  processed_train_path: data/ieee_fraud_detection/processed_train.parquet
+  processed_test_path: data/ieee_fraud_detection/processed_test.parquet
+  preprocessing_artifact_dir: data/ieee_fraud_detection/preprocessing
+  preprocessing_chunk_size: 25000
+  target_column: isFraud
+  id_column: TransactionID
+  time_column: TransactionDT
+  drop_columns:
+    - TransactionID
+
+train:
+  output_dir: artifacts
+  random_state: 101
+  test_size: 0.2
+  cv_folds: 10
+  time_based_split: true
+  max_train_rows: null
+
+mlflow:
+  tracking_uri: file:./mlruns
+  experiment_name: ieee-fraud-detection-baselines
+  registered_model_name: ieee-fraud-detector
+  promote_best_to_production: false

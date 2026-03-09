@@ -1,0 +1,60 @@
+stages:
+  prepare_data:
+    cmd: python src/data/prepare_ieee_data.py --zip-path ${data.zip_path} --output-dir ${data.output_dir}
+    deps:
+      - src/data/prepare_ieee_data.py
+      - ${data.zip_path}
+    params:
+      - data.zip_path
+      - data.output_dir
+    outs:
+      - data/ieee_fraud_detection/raw_train_transaction.csv
+      - data/ieee_fraud_detection/raw_train_identity.csv
+      - data/ieee_fraud_detection/raw_test_transaction.csv
+      - data/ieee_fraud_detection/raw_test_identity.csv
+      - data/ieee_fraud_detection/train_merged.parquet
+      - data/ieee_fraud_detection/test_merged.parquet
+      - data/ieee_fraud_detection/dataset_summary.json
+
+  smart_preprocess:
+    cmd: python src/data/smart_preprocess_ieee.py --params params.yaml --chunk-size ${data.preprocessing_chunk_size}
+    deps:
+      - src/data/smart_preprocess_ieee.py
+      - params.yaml
+      - data/ieee_fraud_detection/train_merged.parquet
+      - data/ieee_fraud_detection/test_merged.parquet
+    params:
+      - data.train_path
+      - data.test_path
+      - data.processed_train_path
+      - data.processed_test_path
+      - data.preprocessing_artifact_dir
+      - data.preprocessing_chunk_size
+      - data.target_column
+      - data.drop_columns
+    outs:
+      - data/ieee_fraud_detection/processed_train.parquet
+      - data/ieee_fraud_detection/processed_test.parquet
+      - data/ieee_fraud_detection/preprocessing/smart_preprocessor.joblib
+      - data/ieee_fraud_detection/preprocessing/feature_groups.json
+    metrics:
+      - data/ieee_fraud_detection/preprocessing/preprocessing_summary.json
+
+  train_models:
+    cmd: python src/train/train_ieee_models.py --params params.yaml
+    deps:
+      - src/train/train_ieee_models.py
+      - params.yaml
+      - data/ieee_fraud_detection/processed_train.parquet
+      - data/ieee_fraud_detection/preprocessing/smart_preprocessor.joblib
+    params:
+      - train
+      - data.processed_train_path
+      - data.target_column
+      - mlflow
+    outs:
+      - artifacts/models
+      - artifacts/plots
+      - artifacts/reports/leaderboard.csv
+    metrics:
+      - artifacts/reports/metrics.json

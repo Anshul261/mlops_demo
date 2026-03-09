@@ -7,3 +7,9 @@ data/**/*.json
 .venv/
 __pycache__/
 *.pyc
+
+# MLflow local tracking data
+mlruns/
+
+# CatBoost local logs
+catboost_info/
