@@ -1,0 +1,153 @@
+schema: '2.0'
+stages:
+  prepare_data:
+    cmd: python src/data/prepare_ieee_data.py --zip-path 
+      /home/ai_alpha_2026/Downloads/ieee-fraud-detection.zip --output-dir 
+      data/ieee_fraud_detection
+    deps:
+    - path: /home/ai_alpha_2026/Downloads/ieee-fraud-detection.zip
+      hash: md5
+      md5: b566db118cf86487c8dc3c363a879eb4
+      size: 123856947
+    - path: src/data/prepare_ieee_data.py
+      hash: md5
+      md5: 3e8662436d2fbeac527b702fbfce2913
+      size: 3143
+    params:
+      params.yaml:
+        data.output_dir: data/ieee_fraud_detection
+        data.zip_path: /home/ai_alpha_2026/Downloads/ieee-fraud-detection.zip
+    outs:
+    - path: data/ieee_fraud_detection/dataset_summary.json
+      hash: md5
+      md5: a7ad54b32c6b2a39e8ba2c429c7e2c87
+      size: 222
+    - path: data/ieee_fraud_detection/raw_test_identity.csv
+      hash: md5
+      md5: 54ae784303f82e5cadeb2d899b05c6a8
+      size: 25797161
+    - path: data/ieee_fraud_detection/raw_test_transaction.csv
+      hash: md5
+      md5: 7ea6862ef4e078efb309e19fa49178fd
+      size: 613194934
+    - path: data/ieee_fraud_detection/raw_train_identity.csv
+      hash: md5
+      md5: 8487db5001c8bad139f3318d5d3db416
+      size: 26529680
+    - path: data/ieee_fraud_detection/raw_train_transaction.csv
+      hash: md5
+      md5: 58b4038d8715f5e11007b826bef00ce7
+      size: 683351067
+    - path: data/ieee_fraud_detection/test_merged.parquet
+      hash: md5
+      md5: 333397beea07e5f1b438a2dd6cc1a87a
+      size: 73691372
+    - path: data/ieee_fraud_detection/train_merged.parquet
+      hash: md5
+      md5: 4cd9e4613f920745ce30ca2605d74475
+      size: 84743836
+  train_models:
+    cmd: python src/train/train_ieee_models.py --params params.yaml
+    deps:
+    - path: data/ieee_fraud_detection/train_merged.parquet
+      hash: md5
+      md5: 4cd9e4613f920745ce30ca2605d74475
+      size: 84743836
+    - path: params.yaml
+      hash: md5
+      md5: 973591ed1b5360e08a3af3be3ae8b69c
+      size: 573
+    - path: src/train/train_ieee_models.py
+      hash: md5
+      md5: 69ce77968c96ad850370a3fcd165bc06
+      size: 11351
+    params:
+      params.yaml:
+        data.drop_columns:
+        - TransactionID
+        data.target_column: isFraud
+        data.time_column: TransactionDT
+        data.train_path: data/ieee_fraud_detection/train_merged.parquet
+        mlflow:
+          tracking_uri: file:./mlruns
+          experiment_name: ieee-fraud-detection-baselines
+        train:
+          output_dir: artifacts
+          random_state: 101
+          test_size: 0.2
+          cv_folds: 10
+          time_based_split: true
+          max_train_rows: 120000
+    outs:
+    - path: artifacts/models
+      hash: md5
+      md5: de632342a00867addd2a1a42096b4405.dir
+      size: 1493715
+      nfiles: 3
+    - path: artifacts/plots
+      hash: md5
+      md5: 7f18ba1276aa6231da4e9d6efc70e435.dir
+      size: 149156
+      nfiles: 1
+    - path: artifacts/reports/leaderboard.csv
+      hash: md5
+      md5: 45fc3bc6822be17bf2c8913c1e757940
+      size: 205
+    - path: artifacts/reports/metrics.json
+      hash: md5
+      md5: 29e47af656db5ba2793ae012b6b7ef4d
+      size: 1634
+  smart_preprocess:
+    cmd: python src/data/smart_preprocess_ieee.py --params params.yaml 
+      --chunk-size 25000
+    deps:
+    - path: data/ieee_fraud_detection/test_merged.parquet
+      hash: md5
+      md5: 333397beea07e5f1b438a2dd6cc1a87a
+      size: 73691372
+    - path: data/ieee_fraud_detection/train_merged.parquet
+      hash: md5
+      md5: 4cd9e4613f920745ce30ca2605d74475
+      size: 84743836
+    - path: params.yaml
+      hash: md5
+      md5: d188762ce47ca1b2c7a66db8bddd992d
+      size: 902
+    - path: src/data/smart_preprocess_ieee.py
+      hash: md5
+      md5: 01715e0d44f497606a77e382c054ee4d
+      size: 8711
+    params:
+      params.yaml:
+        data.drop_columns:
+        - TransactionID
+        data.preprocessing_artifact_dir: data/ieee_fraud_detection/preprocessing
+        data.preprocessing_chunk_size: 25000
+        data.processed_test_path: 
+          data/ieee_fraud_detection/processed_test.parquet
+        data.processed_train_path: 
+          data/ieee_fraud_detection/processed_train.parquet
+        data.target_column: isFraud
+        data.test_path: data/ieee_fraud_detection/test_merged.parquet
+        data.train_path: data/ieee_fraud_detection/train_merged.parquet
+    outs:
+    - path: data/ieee_fraud_detection/preprocessing/feature_groups.json
+      hash: md5
+      md5: 47a18f3f532e643a4ed20789dadf2cf3
+      size: 5276
+    - path: data/ieee_fraud_detection/preprocessing/preprocessing_summary.json
+      hash: md5
+      md5: e415c5fe4f0db51bbdad8ac4b035c363
+      size: 154
+    - path: data/ieee_fraud_detection/preprocessing/smart_preprocessor.joblib
+      hash: md5
+      md5: d3f1ebfdc8fc8a5f489f77d0fb1d492f
+      size: 65409
+    - path: data/ieee_fraud_detection/processed_test.parquet
+      hash: md5
+      md5: e70b021f7761e5ae6a8e7cf27e41965b
+      size: 58246011
+    - path: data/ieee_fraud_detection/processed_train.parquet
+      hash: md5
+      md5: 7633aed23ea5416ec9f297c5e37ad903
+      size: 68820169
