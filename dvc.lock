@@ -49,54 +49,58 @@ stages:
   train_models:
     cmd: python src/train/train_ieee_models.py --params params.yaml
     deps:
-    - path: data/ieee_fraud_detection/train_merged.parquet
+    - path: data/ieee_fraud_detection/preprocessing/smart_preprocessor.joblib
       hash: md5
-      md5: 4cd9e4613f920745ce30ca2605d74475
-      size: 84743836
+      md5: d3f1ebfdc8fc8a5f489f77d0fb1d492f
+      size: 65409
+    - path: data/ieee_fraud_detection/processed_train.parquet
+      hash: md5
+      md5: 7633aed23ea5416ec9f297c5e37ad903
+      size: 68820169
     - path: params.yaml
       hash: md5
-      md5: 973591ed1b5360e08a3af3be3ae8b69c
-      size: 573
+      md5: d188762ce47ca1b2c7a66db8bddd992d
+      size: 902
     - path: src/train/train_ieee_models.py
       hash: md5
-      md5: 69ce77968c96ad850370a3fcd165bc06
-      size: 11351
+      md5: 99e7f05e5e43c497c047bb4978ea19c8
+      size: 11047
     params:
       params.yaml:
-        data.drop_columns:
-        - TransactionID
+        data.processed_train_path: 
+          data/ieee_fraud_detection/processed_train.parquet
         data.target_column: isFraud
-        data.time_column: TransactionDT
-        data.train_path: data/ieee_fraud_detection/train_merged.parquet
         mlflow:
           tracking_uri: file:./mlruns
           experiment_name: ieee-fraud-detection-baselines
+          registered_model_name: ieee-fraud-detector
+          promote_best_to_production: false
         train:
           output_dir: artifacts
           random_state: 101
           test_size: 0.2
           cv_folds: 10
           time_based_split: true
-          max_train_rows: 120000
+          max_train_rows:
     outs:
     - path: artifacts/models
       hash: md5
-      md5: de632342a00867addd2a1a42096b4405.dir
-      size: 1493715
-      nfiles: 3
+      md5: d87253a6e6ddddc724c990a96399261d.dir
+      size: 1506804
+      nfiles: 2
     - path: artifacts/plots
       hash: md5
-      md5: 7f18ba1276aa6231da4e9d6efc70e435.dir
-      size: 149156
+      md5: b533d1edbbcaeaa3ca159a29a16b03a0.dir
+      size: 157304
       nfiles: 1
     - path: artifacts/reports/leaderboard.csv
       hash: md5
-      md5: 45fc3bc6822be17bf2c8913c1e757940
-      size: 205
+      md5: 756c6f31dc777a6e29728f01fd8587d8
+      size: 229
     - path: artifacts/reports/metrics.json
       hash: md5
-      md5: 29e47af656db5ba2793ae012b6b7ef4d
-      size: 1634
+      md5: 8ece392490b6b8acdc515846bcb26123
+      size: 1929
   smart_preprocess:
     cmd: python src/data/smart_preprocess_ieee.py --params params.yaml 
       --chunk-size 25000
